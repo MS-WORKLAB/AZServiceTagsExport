@@ -1,4 +1,4 @@
-# AZServiceTagsExport
+# Using Logic App to get AZServiceTagsExport
 
 tasks:
 

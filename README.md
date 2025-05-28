@@ -1,4 +1,6 @@
-# Using Logic App to get AZServiceTagsExport
+# Using Logic App to get AZServiceTags
+
+https://www.microsoft.com/en-us/download/details.aspx?id=56519
 
 tasks:
 

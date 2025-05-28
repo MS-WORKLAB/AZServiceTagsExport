@@ -10,7 +10,7 @@ tasks:
 
 > json parse 
 
-> filter specific 
+> filter specific (use "name" of json schema)
 
 ![image](https://github.com/user-attachments/assets/4fde6bc9-4903-4439-8950-2941cd7c6f49)
 

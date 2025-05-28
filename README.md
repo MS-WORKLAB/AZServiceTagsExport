@@ -2,16 +2,15 @@
 
 tasks:
 
-parse http (heck ServiceTags file name)
+> parse http (heck ServiceTags file name)
 
-get file
+> get file
 
-json parse 
+> json parse 
 
-filter specific 
+> filter specific 
 
 ![image](https://github.com/user-attachments/assets/4fde6bc9-4903-4439-8950-2941cd7c6f49)
 
-
-export to csv
+> export to csv
 

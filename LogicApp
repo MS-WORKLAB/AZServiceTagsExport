@@ -1,0 +1,249 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "DecodeJSON": {
+                "type": "Compose",
+                "inputs": "@\r\nstring(body('HTTP'))\r\n",
+                "runAfter": {
+                    "HTTP": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "HTTP": {
+                "type": "Http",
+                "inputs": {
+                    "uri": "@concat('https://download.microsoft.com/download/7/1/d/71d86715-5596-4529-9b13-da13a5de5b63/', variables('FileNameVar'))",
+                    "method": "GET"
+                },
+                "runAfter": {
+                    "FileNameVar": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "Parse_JSON": {
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@outputs('DecodeJSON')",
+                    "schema": {
+                        "$schema": "http://json-schema.org/draft-07/schema#",
+                        "title": "Generated schema for Root",
+                        "type": "object",
+                        "properties": {
+                            "changeNumber": {
+                                "type": "number"
+                            },
+                            "cloud": {
+                                "type": "string"
+                            },
+                            "values": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "properties": {
+                                            "type": "object",
+                                            "properties": {
+                                                "changeNumber": {
+                                                    "type": "number"
+                                                },
+                                                "region": {
+                                                    "type": "string"
+                                                },
+                                                "regionId": {
+                                                    "type": "number"
+                                                },
+                                                "platform": {
+                                                    "type": "string"
+                                                },
+                                                "systemService": {
+                                                    "type": "string"
+                                                },
+                                                "addressPrefixes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "networkFeatures": {
+                                                    "oneOf": [
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "changeNumber",
+                                                "region",
+                                                "regionId",
+                                                "platform",
+                                                "systemService",
+                                                "addressPrefixes"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "id",
+                                        "properties"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "changeNumber",
+                            "cloud",
+                            "values"
+                        ]
+                    }
+                },
+                "runAfter": {
+                    "DecodeJSON": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Filter_array": {
+                "type": "Query",
+                "inputs": {
+                    "from": "@body('Parse_JSON')?['values']",
+                    "where": "@equals(item()?['name'],'AzureHealthcareAPIs')"
+                },
+                "runAfter": {
+                    "Parse_JSON": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Compose": {
+                "type": "Compose",
+                "inputs": "@first(body('Filter_array'))?['properties']?['addressPrefixes']\r\n",
+                "runAfter": {
+                    "Filter_array": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Select": {
+                "type": "Select",
+                "inputs": {
+                    "from": "@outputs('Compose')",
+                    "select": {
+                        "prefix": "@item()"
+                    }
+                },
+                "runAfter": {
+                    "Compose": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Create_CSV_table": {
+                "type": "Table",
+                "inputs": {
+                    "from": "@body('Select')",
+                    "format": "CSV"
+                },
+                "runAfter": {
+                    "Select": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "GetWebFileName": {
+                "type": "Http",
+                "inputs": {
+                    "uri": "https://www.microsoft.com/en-us/download/details.aspx?id=56519",
+                    "method": "GET"
+                },
+                "runAfter": {},
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "ComposeWebFileName": {
+                "type": "Compose",
+                "inputs": "@body('GetWebFileName')",
+                "runAfter": {
+                    "GetWebFileName": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "Expression": {
+                "type": "Compose",
+                "inputs": "@substring(outputs('ComposeWebFileName'), indexOf(outputs('ComposeWebFileName'), 'ServiceTags_Public_'), 32)",
+                "runAfter": {
+                    "ComposeWebFileName": [
+                        "SUCCEEDED"
+                    ]
+                }
+            },
+            "FileNameVar": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "FileNameVar",
+                            "type": "string",
+                            "value": "@{outputs('Expression')}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Expression": [
+                        "SUCCEEDED"
+                    ]
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "type": "Recurrence",
+                "description": "2025-05-28T10:00:00Z",
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Week",
+                    "timeZone": "GTB Standard Time",
+                    "startTime": "2025-05-28T10:00:00Z",
+                    "schedule": {
+                        "weekDays": [
+                            "Thursday"
+                        ],
+                        "hours": [
+                            6
+                        ],
+                        "minutes": [
+                            15
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "kind": "Stateful"
+}

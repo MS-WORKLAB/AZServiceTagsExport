@@ -2,7 +2,7 @@
 
 tasks:
 
-> parse http (heck ServiceTags file name)
+> parse http (check current ServiceTags file name)
 
 > get file
 
